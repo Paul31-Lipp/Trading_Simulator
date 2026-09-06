@@ -1,0 +1,1745 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TradeSim – Trading Simulation</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background: #0b0f19;
+            color: #fff;
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* =========================
+           SIDEBAR
+        ========================= */
+
+        .sidebar {
+            width: 240px;
+            background: #111827;
+            border-right: 1px solid #263244;
+            padding: 25px 15px;
+            position: fixed;
+            height: 100vh;
+            left: 0;
+            top: 0;
+        }
+
+        .logo {
+            font-size: 25px;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 35px;
+        }
+
+        .logo span {
+            color: #22c55e;
+        }
+
+        .balance-box {
+            background: #182235;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 25px;
+        }
+
+        .balance-title {
+            color: #94a3b8;
+            font-size: 13px;
+            margin-bottom: 7px;
+        }
+
+        .balance {
+            font-size: 25px;
+            font-weight: bold;
+            color: #22c55e;
+        }
+
+        .nav button {
+            width: 100%;
+            padding: 13px;
+            margin-bottom: 8px;
+            border: none;
+            border-radius: 8px;
+            background: transparent;
+            color: #cbd5e1;
+            text-align: left;
+            cursor: pointer;
+            font-size: 15px;
+        }
+
+        .nav button:hover,
+        .nav button.active {
+            background: #1e293b;
+            color: #fff;
+        }
+
+        /* =========================
+           MAIN
+        ========================= */
+
+        .main {
+            margin-left: 240px;
+            width: calc(100% - 240px);
+            padding: 30px;
+        }
+
+        .page {
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        h1 {
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #94a3b8;
+            margin-bottom: 25px;
+        }
+
+        /* =========================
+           DASHBOARD
+        ========================= */
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 18px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: #111827;
+            border: 1px solid #263244;
+            border-radius: 14px;
+            padding: 22px;
+        }
+
+        .card-title {
+            color: #94a3b8;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .card-value {
+            font-size: 25px;
+            font-weight: bold;
+        }
+
+        /* =========================
+           MARKETS
+        ========================= */
+
+        .markets {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .market {
+            background: #111827;
+            border: 1px solid #263244;
+            border-radius: 14px;
+            padding: 20px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .market:hover {
+            border-color: #22c55e;
+            transform: translateY(-2px);
+        }
+
+        .market-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .market-name {
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .market-symbol {
+            color: #64748b;
+            font-size: 13px;
+        }
+
+        .price {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .percentage {
+            font-weight: bold;
+        }
+
+        .green {
+            color: #22c55e;
+        }
+
+        .red {
+            color: #ef4444;
+        }
+
+        /* =========================
+           TRADING PANEL
+        ========================= */
+
+        .trade-panel {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+        }
+
+        .chart-box,
+        .trade-box {
+            background: #111827;
+            border: 1px solid #263244;
+            border-radius: 14px;
+            padding: 20px;
+        }
+
+        .chart {
+            height: 400px;
+            position: relative;
+            background:
+                linear-gradient(#1f2937 1px, transparent 1px),
+                linear-gradient(90deg, #1f2937 1px, transparent 1px);
+            background-size: 50px 50px;
+            margin-top: 20px;
+            overflow: hidden;
+            border-radius: 10px;
+        }
+
+        .line {
+            position: absolute;
+            width: 100%;
+            height: 3px;
+            background: #22c55e;
+            transform: rotate(-8deg);
+            top: 55%;
+        }
+
+        .zone {
+            position: absolute;
+            left: 0;
+            width: 100%;
+            padding: 5px 10px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .entry-zone {
+            top: 52%;
+            background: rgba(34, 197, 94, 0.15);
+            border-top: 1px dashed #22c55e;
+            border-bottom: 1px dashed #22c55e;
+            color: #22c55e;
+        }
+
+        .liquidation-zone {
+            top: 72%;
+            background: rgba(239, 68, 68, 0.15);
+            border-top: 1px dashed #ef4444;
+            color: #ef4444;
+        }
+
+        .input-group {
+            margin-bottom: 18px;
+        }
+
+        .input-group label {
+            display: block;
+            color: #94a3b8;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        input,
+        select {
+            width: 100%;
+            background: #0b0f19;
+            color: #fff;
+            border: 1px solid #334155;
+            padding: 12px;
+            border-radius: 8px;
+            outline: none;
+        }
+
+        input:focus,
+        select:focus {
+            border-color: #22c55e;
+        }
+
+        .trade-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .buy,
+        .sell {
+            border: none;
+            padding: 13px;
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .buy {
+            background: #16a34a;
+        }
+
+        .sell {
+            background: #dc2626;
+        }
+
+        .buy:hover {
+            background: #22c55e;
+        }
+
+        .sell:hover {
+            background: #ef4444;
+        }
+
+        .back {
+            background: #1e293b;
+            border: none;
+            color: #fff;
+            padding: 10px 15px;
+            border-radius: 7px;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+
+        /* =========================
+           POSITIONS / HISTORY
+        ========================= */
+
+        .position,
+        .history-item {
+            background: #111827;
+            border: 1px solid #263244;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 12px;
+        }
+
+        .position-header,
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .empty {
+            background: #111827;
+            padding: 40px;
+            text-align: center;
+            color: #64748b;
+            border-radius: 12px;
+        }
+
+        .close-btn {
+            border: none;
+            background: #334155;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .close-btn:hover {
+            background: #475569;
+        }
+
+        /* =========================
+           RESPONSIVE
+        ========================= */
+
+        @media (max-width: 900px) {
+            .sidebar {
+                width: 190px;
+            }
+
+            .main {
+                margin-left: 190px;
+                width: calc(100% - 190px);
+            }
+
+            .cards,
+            .markets,
+            .trade-panel {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 650px) {
+            .sidebar {
+                position: relative;
+                width: 100%;
+                height: auto;
+            }
+
+            body {
+                display: block;
+            }
+
+            .main {
+                margin-left: 0;
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<!-- =========================
+     SIDEBAR
+========================= -->
+
+<aside class="sidebar">
+
+    <div class="logo">
+        Trade<span>Sim</span>
+    </div>
+
+    <div class="balance-box">
+        <div class="balance-title">Aktuelles Guthaben</div>
+        <div class="balance" id="sidebarBalance">100,00 €</div>
+    </div>
+
+    <div class="nav">
+
+        <button class="active" onclick="showPage('dashboard', this)">
+            📊 Dashboard
+        </button>
+
+        <button onclick="showPage('markets', this)">
+            📈 Märkte
+        </button>
+
+        <button onclick="showPage('positions', this)">
+            📌 Positionen
+        </button>
+
+        <button onclick="showPage('history', this)">
+            🕒 Historie
+        </button>
+
+    </div>
+
+</aside>
+
+
+<!-- =========================
+     MAIN
+========================= -->
+
+<main class="main">
+
+    <!-- DASHBOARD -->
+
+    <section id="dashboard" class="page active">
+
+        <h1>Dashboard</h1>
+        <p class="subtitle">
+            Willkommen bei deiner Trading-Simulation.
+        </p>
+
+        <div class="cards">
+
+            <div class="card">
+                <div class="card-title">
+                    Aktuelles Guthaben
+                </div>
+
+                <div class="card-value green" id="dashboardBalance">
+                    100,00 €
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">
+                    Offene Positionen
+                </div>
+
+                <div class="card-value" id="positionCount">
+                    0
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">
+                    Abgeschlossene Trades
+                </div>
+
+                <div class="card-value" id="historyCount">
+                    0
+                </div>
+            </div>
+
+        </div>
+
+        <div class="card">
+
+            <h2>So funktioniert die Simulation</h2>
+
+            <p style="color:#94a3b8; margin-top:15px; line-height:1.7;">
+                Wähle unter „Märkte“ einen Markt aus. Danach kannst du
+                einen Hebel auswählen und festlegen, wie viel deines
+                virtuellen Guthabens du investieren möchtest.
+                Öffne anschließend eine Long- oder Short-Position.
+            </p>
+
+        </div>
+
+    </section>
+
+
+    <!-- MARKETS -->
+
+    <section id="markets" class="page">
+
+        <h1>Märkte</h1>
+
+        <p class="subtitle">
+            Klicke auf einen Markt, um den Trade zu starten.
+        </p>
+
+        <div class="markets" id="marketsContainer"></div>
+
+    </section>
+
+
+    <!-- TRADING -->
+
+    <section id="trading" class="page">
+
+        <button class="back" onclick="goBackToMarkets()">
+            ← Zurück zu Märkten
+        </button>
+
+        <h1 id="tradeTitle">
+            Trading
+        </h1>
+
+        <p class="subtitle">
+            Virtueller Handel
+        </p>
+
+        <div class="trade-panel">
+
+            <div class="chart-box">
+
+                <div style="display:flex; justify-content:space-between;">
+
+                    <div>
+                        <div id="selectedMarketName"
+                             style="font-size:20px;font-weight:bold;">
+                            -
+                        </div>
+
+                        <div id="selectedSymbol"
+                             style="color:#64748b;">
+                            -
+                        </div>
+                    </div>
+
+                    <div style="text-align:right">
+
+                        <div id="selectedPrice"
+                             style="font-size:25px;font-weight:bold;">
+                            -
+                        </div>
+
+                        <div id="selectedPercentage">
+                            -
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="chart">
+
+                    <div class="zone entry-zone">
+                        EINSTIEGSZONE
+                    </div>
+
+                    <div class="zone liquidation-zone">
+                        LIQUIDATIONZONE
+                    </div>
+
+                    <div class="line"></div>
+
+                </div>
+
+            </div>
+
+
+            <div class="trade-box">
+
+                <h2>Trade eröffnen</h2>
+
+                <br>
+
+                <div class="input-group">
+
+                    <label>
+                        Investitionsbetrag
+                    </label>
+
+                    <input
+                        type="number"
+                        id="investment"
+                        min="1"
+                        step="1"
+                        value="10"
+                    >
+
+                    <small style="color:#64748b;">
+                        Verfügbar:
+                        <span id="availableMoney">100</span> €
+                    </small>
+
+                </div>
+
+
+                <div class="input-group">
+
+                    <label>
+                        Hebel
+                    </label>
+
+                    <select id="leverage">
+
+                        <option value="1">1x</option>
+                        <option value="2">2x</option>
+                        <option value="5">5x</option>
+                        <option value="10">10x</option>
+                        <option value="20">20x</option>
+
+                    </select>
+
+                </div>
+
+
+                <div class="input-group">
+
+                    <label>
+                        Positionsgröße
+                    </label>
+
+                    <input
+                        id="positionSize"
+                        type="text"
+                        value="10 €"
+                        disabled
+                    >
+
+                </div>
+
+
+                <div class="input-group">
+
+                    <label>
+                        Einstiegspreis
+                    </label>
+
+                    <input
+                        id="entryPrice"
+                        type="text"
+                        disabled
+                    >
+
+                </div>
+
+
+                <div class="input-group">
+
+                    <label>
+                        Geschätzte Liquidation
+                    </label>
+
+                    <input
+                        id="liquidationPrice"
+                        type="text"
+                        disabled
+                    >
+
+                </div>
+
+
+                <div class="trade-buttons">
+
+                    <button class="buy"
+                            onclick="openPosition('LONG')">
+                        LONG ↑
+                    </button>
+
+                    <button class="sell"
+                            onclick="openPosition('SHORT')">
+                        SHORT ↓
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- POSITIONS -->
+
+    <section id="positions" class="page">
+
+        <h1>Positionen</h1>
+
+        <p class="subtitle">
+            Alle aktuell laufenden Trades.
+        </p>
+
+        <div id="positionsContainer"></div>
+
+    </section>
+
+
+    <!-- HISTORY -->
+
+    <section id="history" class="page">
+
+        <h1>Historie</h1>
+
+        <p class="subtitle">
+            Alle abgeschlossenen Trades.
+        </p>
+
+        <div id="historyContainer"></div>
+
+    </section>
+
+</main>
+
+
+<script>
+
+    /* =================================
+       DATEN
+    ================================= */
+
+    let balance = 100;
+
+    let selectedMarket = null;
+
+    let positions = [];
+
+    let history = [];
+
+
+    /*
+        10 virtuelle Märkte
+    */
+
+    const markets = [
+
+        {
+            name: "Bitcoin",
+            symbol: "BTC/USD",
+            price: 65000,
+            change: 2.31
+        },
+
+        {
+            name: "Ethereum",
+            symbol: "ETH/USD",
+            price: 3200,
+            change: -1.42
+        },
+
+        {
+            name: "Apple",
+            symbol: "AAPL",
+            price: 225,
+            change: 1.18
+        },
+
+        {
+            name: "Tesla",
+            symbol: "TSLA",
+            price: 280,
+            change: -2.72
+        },
+
+        {
+            name: "NVIDIA",
+            symbol: "NVDA",
+            price: 140,
+            change: 3.48
+        },
+
+        {
+            name: "Gold",
+            symbol: "XAU/USD",
+            price: 2500,
+            change: 0.76
+        },
+
+        {
+            name: "S&P 500",
+            symbol: "SPX",
+            price: 5600,
+            change: 0.43
+        },
+
+        {
+            name: "DAX",
+            symbol: "GER40",
+            price: 18500,
+            change: -0.38
+        },
+
+        {
+            name: "EUR/USD",
+            symbol: "EURUSD",
+            price: 1.08,
+            change: 0.21
+        },
+
+        {
+            name: "Amazon",
+            symbol: "AMZN",
+            price: 185,
+            change: 1.84
+        }
+
+    ];
+
+
+    /* =================================
+       SEITENWECHSEL
+    ================================= */
+
+    function showPage(page, button) {
+
+        document
+            .querySelectorAll(".page")
+            .forEach(p => p.classList.remove("active"));
+
+        document
+            .getElementById(page)
+            .classList.add("active");
+
+
+        document
+            .querySelectorAll(".nav button")
+            .forEach(b => b.classList.remove("active"));
+
+
+        if (button) {
+            button.classList.add("active");
+        }
+
+
+        if (page === "markets") {
+            renderMarkets();
+        }
+
+        if (page === "positions") {
+            renderPositions();
+        }
+
+        if (page === "history") {
+            renderHistory();
+        }
+
+        updateUI();
+    }
+
+
+    /* =================================
+       MÄRKTE
+    ================================= */
+
+    function renderMarkets() {
+
+        const container =
+            document.getElementById("marketsContainer");
+
+        container.innerHTML = "";
+
+
+        markets.forEach((market, index) => {
+
+            const changeClass =
+                market.change >= 0
+                    ? "green"
+                    : "red";
+
+
+            const sign =
+                market.change >= 0
+                    ? "+"
+                    : "";
+
+
+            const div =
+                document.createElement("div");
+
+            div.className = "market";
+
+            div.onclick = () => openMarket(index);
+
+
+            div.innerHTML = `
+
+                <div class="market-header">
+
+                    <div>
+
+                        <div class="market-name">
+                            ${market.name}
+                        </div>
+
+                        <div class="market-symbol">
+                            ${market.symbol}
+                        </div>
+
+                    </div>
+
+                    <div class="${changeClass}">
+                        ${sign}${market.change.toFixed(2)}%
+                    </div>
+
+                </div>
+
+                <div class="price">
+                    ${formatPrice(market.price)}
+                </div>
+
+                <div class="${changeClass}">
+                    Tagesveränderung:
+                    ${sign}${market.change.toFixed(2)}%
+                </div>
+
+            `;
+
+
+            container.appendChild(div);
+
+        });
+
+    }
+
+
+    /* =================================
+       MARKT ÖFFNEN
+    ================================= */
+
+    function openMarket(index) {
+
+        selectedMarket = markets[index];
+
+
+        document
+            .querySelectorAll(".page")
+            .forEach(p => p.classList.remove("active"));
+
+
+        document
+            .getElementById("trading")
+            .classList.add("active");
+
+
+        document.getElementById("selectedMarketName")
+            .textContent = selectedMarket.name;
+
+
+        document.getElementById("selectedSymbol")
+            .textContent = selectedMarket.symbol;
+
+
+        updateTradePanel();
+
+    }
+
+
+    function goBackToMarkets() {
+
+        showPage("markets");
+
+    }
+
+
+    /* =================================
+       TRADING PANEL
+    ================================= */
+
+    document
+        .getElementById("investment")
+        .addEventListener("input", updateTradePanel);
+
+
+    document
+        .getElementById("leverage")
+        .addEventListener("change", updateTradePanel);
+
+
+    function updateTradePanel() {
+
+        if (!selectedMarket) return;
+
+
+        const investment =
+            Number(
+                document.getElementById("investment").value
+            ) || 0;
+
+
+        const leverage =
+            Number(
+                document.getElementById("leverage").value
+            );
+
+
+        const positionSize =
+            investment * leverage;
+
+
+        /*
+            Einfache Demo-Liquidation:
+            Bei Long ungefähr 90% unter Einstieg
+            Bei Short ungefähr 10% über Einstieg.
+        */
+
+        const liquidationLong =
+            selectedMarket.price * (1 - 0.9 / leverage);
+
+
+        document.getElementById("selectedPrice")
+            .textContent =
+            formatPrice(selectedMarket.price);
+
+
+        document.getElementById("selectedPercentage")
+            .textContent =
+            (selectedMarket.change >= 0 ? "+" : "")
+            + selectedMarket.change.toFixed(2) + "%";
+
+
+        document.getElementById("selectedPercentage")
+            .className =
+            selectedMarket.change >= 0
+                ? "green"
+                : "red";
+
+
+        document.getElementById("positionSize")
+            .value =
+            positionSize.toFixed(2) + " €";
+
+
+        document.getElementById("entryPrice")
+            .value =
+            formatPrice(selectedMarket.price);
+
+
+        document.getElementById("liquidationPrice")
+            .value =
+            formatPrice(liquidationLong);
+
+
+        document.getElementById("availableMoney")
+            .textContent =
+            balance.toFixed(2);
+
+    }
+
+
+    /* =================================
+       POSITION ÖFFNEN
+    ================================= */
+
+    function openPosition(type) {
+
+        if (!selectedMarket) return;
+
+
+        const investment =
+            Number(
+                document.getElementById("investment").value
+            );
+
+
+        const leverage =
+            Number(
+                document.getElementById("leverage").value
+            );
+
+
+        if (!investment || investment <= 0) {
+
+            alert("Bitte einen gültigen Betrag eingeben.");
+
+            return;
+
+        }
+
+
+        if (investment > balance) {
+
+            alert("Nicht genügend virtuelles Guthaben.");
+
+            return;
+
+        }
+
+
+        const positionSize =
+            investment * leverage;
+
+
+        let liquidation;
+
+
+        if (type === "LONG") {
+
+            liquidation =
+                selectedMarket.price *
+                (1 - 0.9 / leverage);
+
+        } else {
+
+            liquidation =
+                selectedMarket.price *
+                (1 + 0.9 / leverage);
+
+        }
+
+
+        const position = {
+
+            id: Date.now(),
+
+            market: selectedMarket.name,
+
+            symbol: selectedMarket.symbol,
+
+            type: type,
+
+            investment: investment,
+
+            leverage: leverage,
+
+            size: positionSize,
+
+            entry: selectedMarket.price,
+
+            current: selectedMarket.price,
+
+            liquidation: liquidation,
+
+            opened:
+                new Date().toLocaleString("de-DE")
+
+        };
+
+
+        balance -= investment;
+
+
+        positions.push(position);
+
+
+        updateUI();
+
+
+        alert(
+            type + " Position auf " +
+            selectedMarket.name +
+            " eröffnet!"
+        );
+
+
+        showPage("positions");
+
+    }
+
+
+    /* =================================
+       POSITIONEN
+    ================================= */
+
+    function renderPositions() {
+
+        const container =
+            document.getElementById("positionsContainer");
+
+
+        container.innerHTML = "";
+
+
+        if (positions.length === 0) {
+
+            container.innerHTML = `
+                <div class="empty">
+                    Keine offenen Positionen.
+                </div>
+            `;
+
+            return;
+
+        }
+
+
+        positions.forEach(position => {
+
+            const market =
+                markets.find(
+                    m => m.symbol === position.symbol
+                );
+
+
+            const current =
+                market ? market.price : position.current;
+
+
+            let percentage;
+
+
+            if (position.type === "LONG") {
+
+                percentage =
+                    ((current - position.entry)
+                    / position.entry) * 100;
+
+            } else {
+
+                percentage =
+                    ((position.entry - current)
+                    / position.entry) * 100;
+
+            }
+
+
+            const profit =
+                position.investment *
+                (percentage / 100) *
+                position.leverage;
+
+
+            const color =
+                profit >= 0
+                    ? "green"
+                    : "red";
+
+
+            const sign =
+                profit >= 0
+                    ? "+"
+                    : "";
+
+
+            const div =
+                document.createElement("div");
+
+            div.className = "position";
+
+
+            div.innerHTML = `
+
+                <div class="position-header">
+
+                    <div>
+
+                        <strong>
+                            ${position.market}
+                        </strong>
+
+                        <div style="color:#64748b">
+                            ${position.symbol}
+                        </div>
+
+                    </div>
+
+                    <strong class="${position.type === "LONG" ? "green" : "red"}">
+                        ${position.type}
+                    </strong>
+
+                </div>
+
+                <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px">
+
+                    <div>
+                        Einstieg:
+                        <strong>
+                            ${formatPrice(position.entry)}
+                        </strong>
+                    </div>
+
+                    <div>
+                        Aktuell:
+                        <strong>
+                            ${formatPrice(current)}
+                        </strong>
+                    </div>
+
+                    <div>
+                        Hebel:
+                        <strong>
+                            ${position.leverage}x
+                        </strong>
+                    </div>
+
+                    <div>
+                        Investiert:
+                        <strong>
+                            ${position.investment.toFixed(2)} €
+                        </strong>
+                    </div>
+
+                    <div>
+                        Liquidation:
+                        <strong class="red">
+                            ${formatPrice(position.liquidation)}
+                        </strong>
+                    </div>
+
+                    <div>
+                        P&L:
+                        <strong class="${color}">
+                            ${sign}${profit.toFixed(2)} €
+                        </strong>
+                    </div>
+
+                </div>
+
+                <br>
+
+                <button
+                    class="close-btn"
+                    onclick="closePosition(${position.id})">
+                    Position schließen
+                </button>
+
+            `;
+
+
+            container.appendChild(div);
+
+        });
+
+    }
+
+
+    /* =================================
+       POSITION SCHLIESSEN
+    ================================= */
+
+    function closePosition(id) {
+
+        const index =
+            positions.findIndex(
+                p => p.id === id
+            );
+
+
+        if (index === -1) return;
+
+
+        const position =
+            positions[index];
+
+
+        const market =
+            markets.find(
+                m => m.symbol === position.symbol
+            );
+
+
+        const current =
+            market.price;
+
+
+        let percentage;
+
+
+        if (position.type === "LONG") {
+
+            percentage =
+                ((current - position.entry)
+                / position.entry) * 100;
+
+        } else {
+
+            percentage =
+                ((position.entry - current)
+                / position.entry) * 100;
+
+        }
+
+
+        const profit =
+            position.investment *
+            (percentage / 100) *
+            position.leverage;
+
+
+        /*
+            Ursprüngliches Investment
+            + Gewinn/Verlust zurückgeben
+        */
+
+        const returnedMoney =
+            Math.max(
+                0,
+                position.investment + profit
+            );
+
+
+        balance += returnedMoney;
+
+
+        const historyItem = {
+
+            ...position,
+
+            exit: current,
+
+            profit: profit,
+
+            closed:
+                new Date().toLocaleString("de-DE")
+
+        };
+
+
+        history.unshift(historyItem);
+
+
+        positions.splice(index, 1);
+
+
+        updateUI();
+
+
+        renderPositions();
+
+        alert(
+            "Position geschlossen.\n\n" +
+            "Ergebnis: " +
+            (profit >= 0 ? "+" : "") +
+            profit.toFixed(2) +
+            " €"
+        );
+
+    }
+
+
+    /* =================================
+       HISTORIE
+    ================================= */
+
+    function renderHistory() {
+
+        const container =
+            document.getElementById("historyContainer");
+
+
+        container.innerHTML = "";
+
+
+        if (history.length === 0) {
+
+            container.innerHTML = `
+                <div class="empty">
+                    Noch keine abgeschlossenen Trades.
+                </div>
+            `;
+
+            return;
+
+        }
+
+
+        history.forEach(item => {
+
+            const color =
+                item.profit >= 0
+                    ? "green"
+                    : "red";
+
+
+            const sign =
+                item.profit >= 0
+                    ? "+"
+                    : "";
+
+
+            const div =
+                document.createElement("div");
+
+            div.className = "history-item";
+
+
+            div.innerHTML = `
+
+                <div class="history-header">
+
+                    <div>
+
+                        <strong>
+                            ${item.market}
+                        </strong>
+
+                        <div style="color:#64748b">
+                            ${item.symbol}
+                        </div>
+
+                    </div>
+
+                    <strong class="${color}">
+                        ${sign}${item.profit.toFixed(2)} €
+                    </strong>
+
+                </div>
+
+                <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px">
+
+                    <div>
+                        Richtung:
+                        <strong>
+                            ${item.type}
+                        </strong>
+                    </div>
+
+                    <div>
+                        Hebel:
+                        <strong>
+                            ${item.leverage}x
+                        </strong>
+                    </div>
+
+                    <div>
+                        Einstieg:
+                        <strong>
+                            ${formatPrice(item.entry)}
+                        </strong>
+                    </div>
+
+                    <div>
+                        Ausstieg:
+                        <strong>
+                            ${formatPrice(item.exit)}
+                        </strong>
+                    </div>
+
+                    <div>
+                        Investiert:
+                        <strong>
+                            ${item.investment.toFixed(2)} €
+                        </strong>
+                    </div>
+
+                    <div>
+                        Geschlossen:
+                        <strong>
+                            ${item.closed}
+                        </strong>
+                    </div>
+
+                </div>
+
+            `;
+
+
+            container.appendChild(div);
+
+        });
+
+    }
+
+
+    /* =================================
+       GUTHABEN / UI
+    ================================= */
+
+    function updateUI() {
+
+        const formatted =
+            balance.toLocaleString(
+                "de-DE",
+                {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                }
+            ) + " €";
+
+
+        document.getElementById("sidebarBalance")
+            .textContent = formatted;
+
+
+        document.getElementById("dashboardBalance")
+            .textContent = formatted;
+
+
+        document.getElementById("positionCount")
+            .textContent = positions.length;
+
+
+        document.getElementById("historyCount")
+            .textContent = history.length;
+
+
+        if (selectedMarket) {
+
+            document.getElementById("availableMoney")
+                .textContent =
+                balance.toFixed(2);
+
+        }
+
+    }
+
+
+    /* =================================
+       PREISFORMATIERUNG
+    ================================= */
+
+    function formatPrice(price) {
+
+        if (price < 10) {
+
+            return price.toFixed(4);
+
+        }
+
+
+        if (price < 1000) {
+
+            return price.toFixed(2);
+
+        }
+
+
+        return price.toLocaleString(
+            "de-DE",
+            {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }
+        );
+
+    }
+
+
+    /* =================================
+       VIRTUELLE MARKTBEWEGUNG
+    ================================= */
+
+    function updateMarkets() {
+
+        markets.forEach(market => {
+
+            /*
+                Zufällige Bewegung zwischen
+                -0,5% und +0,5%
+            */
+
+            const movement =
+                (Math.random() - 0.5) * 0.01;
+
+
+            market.price *=
+                (1 + movement);
+
+
+            market.change +=
+                movement * 100;
+
+        });
+
+
+        renderMarkets();
+
+
+        if (selectedMarket) {
+
+            /*
+                Referenz aktualisieren
+            */
+
+            selectedMarket =
+                markets.find(
+                    m => m.symbol === selectedMarket.symbol
+                );
+
+
+            updateTradePanel();
+
+        }
+
+
+        /*
+            Offene Positionen aktualisieren
+        */
+
+        if (
+            document
+                .getElementById("positions")
+                .classList
+                .contains("active")
+        ) {
+
+            renderPositions();
+
+        }
+
+    }
+
+
+    /* =================================
+       START
+    ================================= */
+
+    updateUI();
+
+    renderMarkets();
+
+
+    /*
+        Alle 3 Sekunden bewegen sich
+        die virtuellen Märkte.
+    */
+
+    setInterval(
+        updateMarkets,
+        3000
+    );
+
+</script>
+
+</body>
+</html>
